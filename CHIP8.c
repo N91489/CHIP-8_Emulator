@@ -181,12 +181,14 @@ void ExecuteInstructions()
         // 00E0 - Clear Display
         if ((opcode & 0x00FF) == 0x00E0)
         {
-            ClearDisplay();
+            printf("%04x 00E0 - Clear Display %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            ClearDisplay();
         }
         // 00EE - Return
         else if ((opcode & 0x00FF) == 0x00EE)
         {
+            printf("%04x 00EE - Return %04x\n", opcode, Chip8.PC);
             Chip8.SP--;
             Chip8.PC = Chip8.Stack[Chip8.SP];
             Chip8.PC += 2;
@@ -196,12 +198,14 @@ void ExecuteInstructions()
     // 1NNN - Goto NNN
     if ((opcode & 0xF000) == 0x1000)
     {
+        printf("%04x 1NNN - GoTo NNN %04x\n", opcode, Chip8.PC);
         Chip8.PC = (opcode & 0x0FFF);
     }
 
     // 2NNN - Calls subroutine at NNN
     if ((opcode & 0xF000) == 0x2000)
     {
+        printf("%04x 2NNN - Call Subroutine at NNN %04x\n", opcode, Chip8.PC);
         Chip8.Stack[Chip8.SP] = Chip8.PC;
         Chip8.SP++;
         Chip8.PC = (opcode & 0x0FFF);
@@ -212,10 +216,12 @@ void ExecuteInstructions()
     {
         if (Chip8.V[((opcode & 0x0F00) >> 8)] == (opcode & 0x00FF))
         {
+            printf("%04x 3XNN - SKIP INSTR Vx == NN TRUE %04x\n", opcode, Chip8.PC);
             Chip8.PC += 4;
         }
         else
         {
+            printf("%04x 3XNN - SKIP INSTR Vx == NN FALSE %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
         }
     }
@@ -225,10 +231,12 @@ void ExecuteInstructions()
     {
         if (Chip8.V[((opcode & 0x0F00) >> 8)] != (opcode & 0x00FF))
         {
+            printf("%04x 4XNN - SKIP INSTR Vx != NN TRUE %04x\n", opcode, Chip8.PC);
             Chip8.PC += 4;
         }
         else
         {
+            printf("%04x 4XNN - SKIP INSTR Vx != NN FALSE %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
         }
     }
@@ -238,10 +246,12 @@ void ExecuteInstructions()
     {
         if (Chip8.V[((opcode & 0x0F00) >> 8)] == Chip8.V[((opcode & 0x00F0) >> 4)])
         {
+            printf("%04x 5XY0 - SKIP INSTR Vx == Vy TRUE %04x\n", opcode, Chip8.PC);
             Chip8.PC += 4;
         }
         else
         {
+            printf("%04x 5XY0 - SKIP INSTR Vx == Vy FALSE %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
         }
     }
@@ -249,6 +259,7 @@ void ExecuteInstructions()
     // 6XNN - SET Vx = NN
     if ((opcode & 0xF000) == 0x6000)
     {
+        printf("%04x 6XNN - SET Vx = NN %04x\n", opcode, Chip8.PC);
         Chip8.V[((opcode & 0x0F00) >> 8)] = (opcode & 0x00FF);
         Chip8.PC += 2;
     }
@@ -256,8 +267,9 @@ void ExecuteInstructions()
     // 7XNN - ADD Vx += NN
     if ((opcode & 0xF000) == 0x7000)
     {
-        Chip8.V[((opcode & 0x0F00) >> 8)] += (opcode & 0x00FF);
+        printf("%04x 7XNN - ADD Vx += NN %04x\n", opcode, Chip8.PC);
         Chip8.PC += 2;
+        Chip8.V[((opcode & 0x0F00) >> 8)] += (opcode & 0x00FF);
     }
 
     // 0x8
@@ -266,29 +278,33 @@ void ExecuteInstructions()
         // 8XY0 - SET Vx = Vy
         if ((opcode & 0x000F) == 0x0000)
         {
-            Chip8.V[((opcode & 0x0F00) >> 8)] = Chip8.V[((opcode & 0x00F0) >> 4)];
+            printf("%04x 8XY0 - SET Vx = Vy %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.V[((opcode & 0x0F00) >> 8)] = Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XY1 - SET Vx |= Vy
         else if ((opcode & 0x000F) == 0x0001)
         {
-            Chip8.V[((opcode & 0x0F00) >> 8)] |= Chip8.V[((opcode & 0x00F0) >> 4)];
+            printf("%04x 8XY1 - SET Vx |= NN %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.V[((opcode & 0x0F00) >> 8)] |= Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XY2 - SET Vx &= Vy
         else if ((opcode & 0x000F) == 0x0002)
         {
-            Chip8.V[((opcode & 0x0F00) >> 8)] &= Chip8.V[((opcode & 0x00F0) >> 4)];
+            printf("%04x 8XY2 - SET Vx &= Vy %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.V[((opcode & 0x0F00) >> 8)] &= Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XY3 - SET Vx ^= Vy
         else if ((opcode & 0x000F) == 0x0003)
         {
-            Chip8.V[((opcode & 0x0F00) >> 8)] ^= Chip8.V[((opcode & 0x00F0) >> 4)];
+            printf("%04x 8XY3 - SET Vx ^= Vy %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.V[((opcode & 0x0F00) >> 8)] ^= Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XY4 - SET Vx += Vy
@@ -297,15 +313,16 @@ void ExecuteInstructions()
             // Check OverFlow
             if ((Chip8.V[((opcode & 0x0F00) >> 8)]) + (Chip8.V[((opcode & 0x00F0) >> 4)]) > 255)
             {
+                printf("%04x 8XY4 - SET Vx += Vy FLAG %04x\n", opcode, Chip8.PC);
                 Chip8.V[0xF] = 1;
             }
             else
             {
+                printf("%04x 8XY4 - SET Vx += Vy %04x\n", opcode, Chip8.PC);
                 Chip8.V[0xF] = 0;
             }
-
-            Chip8.V[((opcode & 0x0F00) >> 8)] += Chip8.V[((opcode & 0x00F0) >> 4)];
             Chip8.PC += 2;
+            Chip8.V[((opcode & 0x0F00) >> 8)] += Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XY5 - SET Vx -= Vy
@@ -314,52 +331,56 @@ void ExecuteInstructions()
             // Check UnderFlow
             if (Chip8.V[((opcode & 0x0F00) >> 8)] > Chip8.V[((opcode & 0x00F0) >> 4)])
             {
+                printf("%04x 8XY5 - SET Vx -= Vy FLAG %04x\n", opcode, Chip8.PC);
                 Chip8.V[0xF] = 1;
             }
             else
             {
+                printf("%04x 8XY5 - SET Vx -= Vy %04x\n", opcode, Chip8.PC);
                 Chip8.V[0xF] = 0;
             }
-
-            Chip8.V[((opcode & 0x0F00) >> 8)] -= Chip8.V[((opcode & 0x00F0) >> 4)];
             Chip8.PC += 2;
+            Chip8.V[((opcode & 0x0F00) >> 8)] -= Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XY6 - SET Vx >>= 1
         else if ((opcode & 0x000F) == 0x0006)
         {
+            printf("%04x 8XY3 - SET Vx >>= 1 FLAG %04x\n", opcode, Chip8.PC);
+            Chip8.PC += 2;
             // Flag Set
             Chip8.V[0xF] = (Chip8.V[((opcode & 0x0F00) >> 8)]) & 0x01;
-
             Chip8.V[((opcode & 0x0F00) >> 8)] >>= 1;
-            Chip8.PC += 2;
         }
 
         // 8XY7 - SET Vx = Vy - Vx
         else if ((opcode & 0x000F) == 0x0007)
         {
+
             // Check UnderFlow
             if (Chip8.V[((opcode & 0x00F0) >> 4)] > Chip8.V[((opcode & 0x0F00) >> 8)])
             {
+                printf("%04x 8XY3 - SET Vx = Vy - Vx FLAG %04x\n", opcode, Chip8.PC);
                 Chip8.V[0xF] = 1;
             }
             else
             {
+                printf("%04x 8XY3 - SET Vx = Vy - Vx %04x\n", opcode, Chip8.PC);
                 Chip8.V[0xF] = 0;
             }
-
-            Chip8.V[((opcode & 0x0F00) >> 8)] -= Chip8.V[((opcode & 0x00F0) >> 4)];
             Chip8.PC += 2;
+            Chip8.V[((opcode & 0x0F00) >> 8)] -= Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XYE - SET Vx <<= 1
         else if ((opcode & 0x000F) == 0x000E)
         {
+            printf("%04x 8XYE - SET Vx <<= 1 FLAG %04x\n", opcode, Chip8.PC);
+            Chip8.PC += 2;
             // Flag Set
             Chip8.V[0xF] = (Chip8.V[((opcode & 0x0F00) >> 8)]) >> 7;
 
             Chip8.V[((opcode & 0x0F00) >> 8)] <<= 1;
-            Chip8.PC += 2;
         }
     }
 
@@ -368,10 +389,12 @@ void ExecuteInstructions()
     {
         if (Chip8.V[((opcode & 0x0F00) >> 8)] != Chip8.V[((opcode & 0x00F0) >> 4)])
         {
+            printf("%04x 8XYE - SKIP INSTR Vx != Vy TRUE %04x\n", opcode, Chip8.PC);
             Chip8.PC += 4;
         }
         else
         {
+            printf("%04x 8XYE - SKIP INSTR Vx != Vy FALSE %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
         }
     }
@@ -379,29 +402,33 @@ void ExecuteInstructions()
     // ANNN - SET I = NNN
     if ((opcode & 0xF000) == 0xA000)
     {
-        Chip8.I = (opcode & 0x0FFF);
+        printf("%04x ANNN - SET I = NNN TRUE %04x\n", opcode, Chip8.PC);
         Chip8.PC += 2;
+        Chip8.I = (opcode & 0x0FFF);
     }
 
     // BNNN - SET PC = V0 + NNN
     if ((opcode & 0xF000) == 0xB000)
     {
-        Chip8.PC = Chip8.V[0x0] + (opcode & 0x0FFF);
+        printf("%04x BNNN - SET PC = V0 + NNN %04x\n", opcode, Chip8.PC);
         Chip8.PC += 2;
+        Chip8.PC = Chip8.V[0x0] + (opcode & 0x0FFF);
     }
 
     // CXNN - SET Vx = rand(0-255) & NN
     if ((opcode & 0xF000) == 0xC000)
     {
-        Chip8.V[((opcode & 0x0F00) >> 8)] = (rand() % 0xFF) & (opcode & 0x00FF);
+        printf("%04x CXNN - SET Vx = rand(0-255) & NN %04x\n", opcode, Chip8.PC);
         Chip8.PC += 2;
+        Chip8.V[((opcode & 0x0F00) >> 8)] = (rand() % 0xFF) & (opcode & 0x00FF);
     }
 
     // DXYN - DISPLAY draw(Vx, Vy, N)
     if ((opcode & 0xF000) == 0xD000)
     {
-        DrawSprite(((opcode & 0x0F00) >> 8), ((opcode & 0x00F0) >> 4), (opcode & 0x000F));
+        printf("%04x DXYN - DISPLAY %04x\n", opcode, Chip8.PC);
         Chip8.PC += 2;
+        DrawSprite(((opcode & 0x0F00) >> 8), ((opcode & 0x00F0) >> 4), (opcode & 0x000F));
     }
 
     // 0xE
@@ -412,6 +439,7 @@ void ExecuteInstructions()
         {
             if (Chip8.Key[((opcode & 0x0F00) >> 8)] == 1)
             {
+                printf("%04x EX9E - SKIP if(key[Vx] == 1) %04x\n", opcode, Chip8.PC);
                 Chip8.PC += 2;
             }
         }
@@ -421,6 +449,7 @@ void ExecuteInstructions()
         {
             if (Chip8.Key[((opcode & 0x0F00) >> 8)] != 1)
             {
+                printf("%04x EXA1 - SKIP if(key[Vx] != 1) %04x\n", opcode, Chip8.PC);
                 Chip8.PC += 2;
             }
         }
@@ -432,17 +461,20 @@ void ExecuteInstructions()
         // FX07 - SET Vx = Delay_Timer
         if ((opcode & 0x00FF) == 0x0007)
         {
-            Chip8.V[((opcode & 0x0F00) >> 8)] = Chip8.Delay_Timer;
+            printf("%04x FX07 - SET Vx = Delay_Timer %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.V[((opcode & 0x0F00) >> 8)] = Chip8.Delay_Timer;
         }
 
         // FX0A - AWAIT EXEC UNTIL if(AnyKey == 1) & Store (AnyKey == 1) = Vx
         if ((opcode & 0x00FF) == 0x000A)
         {
+            bool key_pressed = false;
             for (int i = 0; i < 16; i++)
             {
                 if (Chip8.Key[i] == 1)
                 {
+                    printf("%04x FX0A - AWAIT EXEC UNTIL if(AnyKey == 1) & Store (AnyKey == 1) = Vx %04x\n", opcode, Chip8.PC);
                     Chip8.V[((opcode & 0x0F00) >> 8)] = i;
                     Chip8.PC += 2;
                     break;
@@ -453,68 +485,64 @@ void ExecuteInstructions()
         // FX15 - SET Delay_Timer = Vx
         if ((opcode & 0x00FF) == 0x0015)
         {
-            Chip8.Delay_Timer = Chip8.V[((opcode & 0x0F00) >> 8)];
+            printf("%04x FX15 - SET Delay_Timer = Vx %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.Delay_Timer = Chip8.V[((opcode & 0x0F00) >> 8)];
         }
 
         // FX18 - SET Sound_Timer = Vx
         if ((opcode & 0x00FF) == 0x0018)
         {
-            Chip8.Sound_Timer = Chip8.V[((opcode & 0x0F00) >> 8)];
+            printf("%04x FX18 - SET Sound_Timer = Vx %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.Sound_Timer = Chip8.V[((opcode & 0x0F00) >> 8)];
         }
 
         // FX1E - SET I += Vx
         if ((opcode & 0x00FF) == 0x001E)
         {
-            Chip8.I += Chip8.V[((opcode & 0x0F00) >> 8)];
+            printf("%04x FX1E - SET I += Vx %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.I += Chip8.V[((opcode & 0x0F00) >> 8)];
         }
 
         // FX29 - SET I = Sprite_Address of Vx
         if ((opcode & 0x00FF) == 0x0029)
         {
-            Chip8.I = Chip8.V[((opcode & 0x0F00) >> 8)] * 0x5;
+            printf("%04x FX29 - SET I = Sprite_Address of Vx %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.I = Chip8.V[((opcode & 0x0F00) >> 8)] * 0x5;
         }
 
         // FX33 - BCD of Vx At I[0] = BCD(100), I[1] = BCD(10), I[2] = BCD(1)
         if ((opcode & 0x00FF) == 0x0033)
         {
-            Chip8.Memory[Chip8.I] = Chip8.V[((opcode & 0x0F00) >> 8)] % 10;
-            Chip8.Memory[Chip8.I + 1] = ((Chip8.V[((opcode & 0x0F00) >> 8)]) / 10) % 10;
-            Chip8.Memory[Chip8.I + 2] = (Chip8.V[((opcode & 0x0F00) >> 8)] / 100) % 10;
+            printf("%04x FX33 - BCD of Vx At I[0] = BCD(100), I[1] = BCD(10), I[2] = BCD(1) %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
+            Chip8.Memory[Chip8.I] = Chip8.V[((opcode & 0x0F00) >> 8)] / 100;
+            Chip8.Memory[Chip8.I + 1] = ((Chip8.V[((opcode & 0x0F00) >> 8)]) / 10) % 10;
+            Chip8.Memory[Chip8.I + 2] = Chip8.V[((opcode & 0x0F00) >> 8)] % 10;
         }
 
         // FX55 - SET Memory[I + i] = V[i]
         if ((opcode & 0x00FF) == 0x0055)
         {
+            Chip8.PC += 2;
             for (int i = 0; i < ((opcode & 0x0F00) >> 8); i++)
             {
                 Chip8.Memory[(Chip8.I + i)] = Chip8.V[i];
             }
-            Chip8.PC += 2;
         }
 
         // FX65 - SET V[i] = Memory[I + i]
         if ((opcode & 0x00FF) == 0x0065)
         {
+            printf("%04x FX65 - SET V[i] = Memory[I + i] %04x\n", opcode, Chip8.PC);
+            Chip8.PC += 2;
             for (int i = 0; i < ((opcode & 0x0F00) >> 8); i++)
             {
                 Chip8.V[i] = Chip8.Memory[(Chip8.I + i)];
             }
-            Chip8.PC += 2;
-        }
-
-        // Timers
-        if (Chip8.Delay_Timer > 0)
-        {
-            Chip8.Delay_Timer--;
-        }
-        if (Chip8.Sound_Timer > 0)
-        {
-            Chip8.Sound_Timer--;
         }
     }
 }
@@ -560,66 +588,82 @@ void Run()
                 {
                 case SDLK_1:
                     Chip8.Key[0x1] = 1;
+                    printf("Key 1 pressed\n");
                     break;
 
                 case SDLK_2:
                     Chip8.Key[0x2] = 1;
+                    printf("Key 2 pressed\n");
                     break;
 
                 case SDLK_3:
                     Chip8.Key[0x3] = 1;
+                    printf("Key 3 pressed\n");
                     break;
 
                 case SDLK_4:
                     Chip8.Key[0xC] = 1;
+                    printf("Key C pressed\n");
                     break;
 
                 case SDLK_q:
                     Chip8.Key[0x4] = 1;
+                    printf("Key 4 pressed\n");
                     break;
 
                 case SDLK_w:
                     Chip8.Key[0x5] = 1;
+                    printf("Key 5 pressed\n");
                     break;
 
                 case SDLK_e:
                     Chip8.Key[0x6] = 1;
+                    printf("Key 6 pressed\n");
                     break;
 
                 case SDLK_r:
                     Chip8.Key[0xD] = 1;
+                    printf("Key D pressed\n");
                     break;
 
                 case SDLK_a:
                     Chip8.Key[0x7] = 1;
+                    printf("Key 7 pressed\n");
                     break;
 
                 case SDLK_s:
                     Chip8.Key[0x8] = 1;
+                    printf("Key 8 pressed\n");
                     break;
 
                 case SDLK_d:
                     Chip8.Key[0x9] = 1;
+                    printf("Key 9 pressed\n");
                     break;
 
                 case SDLK_f:
                     Chip8.Key[0xE] = 1;
+                    printf("Key E pressed\n");
                     break;
 
                 case SDLK_z:
                     Chip8.Key[0xA] = 1;
+                    printf("Key A pressed\n");
                     break;
 
                 case SDLK_x:
                     Chip8.Key[0x0] = 1;
+                    printf("Key 0 pressed\n");
                     break;
 
                 case SDLK_c:
                     Chip8.Key[0xB] = 1;
+                    printf("Key B pressed\n");
                     break;
 
                 case SDLK_v:
                     Chip8.Key[0xF] = 1;
+                    printf("Key F pressed\n");
                     break;
 
                 default:
@@ -634,66 +678,82 @@ void Run()
                 {
                 case SDLK_1:
                     Chip8.Key[0x1] = 0;
+                    printf("Key 1 released\n");
                     break;
 
                 case SDLK_2:
                     Chip8.Key[0x2] = 0;
+                    printf("Key 2 released\n");
                     break;
 
                 case SDLK_3:
                     Chip8.Key[0x3] = 0;
+                    printf("Key 3 released\n");
                     break;
 
                 case SDLK_4:
                     Chip8.Key[0xC] = 0;
+                    printf("Key C released\n");
                     break;
 
                 case SDLK_q:
                     Chip8.Key[0x4] = 0;
+                    printf("Key 4 released\n");
                     break;
 
                 case SDLK_w:
                     Chip8.Key[0x5] = 0;
+                    printf("Key 5 released\n");
                     break;
 
                 case SDLK_e:
                     Chip8.Key[0x6] = 0;
+                    printf("Key 6 released\n");
                     break;
 
                 case SDLK_r:
                     Chip8.Key[0xD] = 0;
+                    printf("Key D released\n");
                     break;
 
                 case SDLK_a:
                     Chip8.Key[0x7] = 0;
+                    printf("Key 7 released\n");
                     break;
 
                 case SDLK_s:
                     Chip8.Key[0x8] = 0;
+                    printf("Key 8 released\n");
                     break;
 
                 case SDLK_d:
                     Chip8.Key[0x9] = 0;
+                    printf("Key 9 released\n");
                     break;
 
                 case SDLK_f:
                     Chip8.Key[0xE] = 0;
+                    printf("Key E released\n");
                     break;
 
                 case SDLK_z:
                     Chip8.Key[0xA] = 0;
+                    printf("Key A released\n");
                     break;
 
                 case SDLK_x:
                     Chip8.Key[0x0] = 0;
+                    printf("Key 0 released\n");
                     break;
 
                 case SDLK_c:
                     Chip8.Key[0xB] = 0;
+                    printf("Key B released\n");
                     break;
 
                 case SDLK_v:
                     Chip8.Key[0xF] = 0;
+                    printf("Key F released\n");
                     break;
 
                 default:
@@ -702,8 +762,6 @@ void Run()
                 }
             }
         }
-
-        ExecuteInstructions();
 
         // Clear Renderer
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -724,8 +782,19 @@ void Run()
         }
 
         SDL_RenderPresent(renderer);
+        ExecuteInstructions();
+        // Timers
+        if (Chip8.Delay_Timer > 0)
+        {
+            Chip8.Delay_Timer--;
+        }
+        if (Chip8.Sound_Timer > 0)
+        {
+            Chip8.Sound_Timer--;
+        }
         SDL_Delay(1000 / 60);
     }
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

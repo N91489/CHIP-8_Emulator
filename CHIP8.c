@@ -89,6 +89,10 @@ void ClearDisplay()
 
 void DrawSprite(uint8_t X, uint8_t Y, uint8_t N)
 {
+    // Make Copy of Vx & Vy (As I Wipe Vf to 0 )
+    uint8_t Vx = Chip8.V[X];
+    uint8_t Vy = Chip8.V[Y];
+
     // Clear the collision flag
     Chip8.V[0xF] = 0;
 
@@ -101,13 +105,13 @@ void DrawSprite(uint8_t X, uint8_t Y, uint8_t N)
             if (((Chip8.Memory[Chip8.I + line]) & (0x80 >> bit)) != 0)
             {
                 // Check for collision
-                if (Chip8.Display[((Chip8.V[Y] + line) % GRID_HEIGHT) * GRID_WIDTH + ((Chip8.V[X] + bit) % GRID_WIDTH)] == 1)
+                if (Chip8.Display[((Vy + line) % GRID_HEIGHT) * GRID_WIDTH + ((Vx + bit) % GRID_WIDTH)] == 1)
                 {
                     Chip8.V[0xF] = 1;
                 }
 
                 // XOR the bit on the display
-                Chip8.Display[((Chip8.V[Y] + line) % GRID_HEIGHT) * GRID_WIDTH + ((Chip8.V[X] + bit) % GRID_WIDTH)] ^= 1;
+                Chip8.Display[((Vy + line) % GRID_HEIGHT) * GRID_WIDTH + ((Vx + bit) % GRID_WIDTH)] ^= 1;
             }
         }
     }
@@ -179,14 +183,14 @@ void ExecuteInstructions()
     if ((opcode & 0xF000) == 0x0000)
     {
         // 00E0 - Clear Display
-        if ((opcode & 0x00FF) == 0x00E0)
+        if ((opcode & 0xFFFF) == 0x00E0)
         {
             printf("%04x 00E0 - Clear Display %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
             ClearDisplay();
         }
         // 00EE - Return
-        else if ((opcode & 0x00FF) == 0x00EE)
+        else if ((opcode & 0xFFFF) == 0x00EE)
         {
             printf("%04x 00EE - Return %04x\n", opcode, Chip8.PC);
             Chip8.SP--;
@@ -242,7 +246,7 @@ void ExecuteInstructions()
     }
 
     // 5XY0 - SKIP Instruction if(Vx == Vy)
-    if ((opcode & 0xF000) == 0x5000)
+    if ((opcode & 0xF00F) == 0x5000)
     {
         if (Chip8.V[((opcode & 0x0F00) >> 8)] == Chip8.V[((opcode & 0x00F0) >> 4)])
         {
@@ -310,82 +314,103 @@ void ExecuteInstructions()
         // 8XY4 - SET Vx += Vy
         else if ((opcode & 0x000F) == 0x0004)
         {
-            // Check OverFlow
-            if ((Chip8.V[((opcode & 0x0F00) >> 8)]) + (Chip8.V[((opcode & 0x00F0) >> 4)]) > 255)
-            {
-                printf("%04x 8XY4 - SET Vx += Vy FLAG %04x\n", opcode, Chip8.PC);
-                Chip8.V[0xF] = 1;
-            }
-            else
-            {
-                printf("%04x 8XY4 - SET Vx += Vy %04x\n", opcode, Chip8.PC);
-                Chip8.V[0xF] = 0;
-            }
+            // Extract the X and Y register indices
+            uint8_t X = (opcode & 0x0F00) >> 8;
+            uint8_t Y = (opcode & 0x00F0) >> 4;
+
+            // Calculate the sum and check for overflow
+            uint16_t sum = Chip8.V[X] + Chip8.V[Y];
+
+            // Update Vx with the lower 8 bits of the result
+            Chip8.V[X] = sum & 0xFF;
+
+            // Set the carry flag
+            Chip8.V[0xF] = (sum > 255) ? 1 : 0;
+
+            // Move the program counter
             Chip8.PC += 2;
-            Chip8.V[((opcode & 0x0F00) >> 8)] += Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XY5 - SET Vx -= Vy
         else if ((opcode & 0x000F) == 0x0005)
         {
-            // Check UnderFlow
-            if (Chip8.V[((opcode & 0x0F00) >> 8)] > Chip8.V[((opcode & 0x00F0) >> 4)])
-            {
-                printf("%04x 8XY5 - SET Vx -= Vy FLAG %04x\n", opcode, Chip8.PC);
-                Chip8.V[0xF] = 1;
-            }
-            else
-            {
-                printf("%04x 8XY5 - SET Vx -= Vy %04x\n", opcode, Chip8.PC);
-                Chip8.V[0xF] = 0;
-            }
+            // Extract the X and Y register indices
+            uint8_t X = (opcode & 0x0F00) >> 8;
+            uint8_t Y = (opcode & 0x00F0) >> 4;
+
+            // Calculate the result
+            uint8_t Vx = Chip8.V[X];
+            uint8_t Vy = Chip8.V[Y];
+
+            // Update Vx
+            Chip8.V[X] = Vx - Vy;
+
+            // Check for Borrow
+            Chip8.V[0xF] = (Vx >= Vy) ? 1 : 0;
+
+            // Move the program counter
             Chip8.PC += 2;
-            Chip8.V[((opcode & 0x0F00) >> 8)] -= Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XY6 - SET Vx >>= 1
         else if ((opcode & 0x000F) == 0x0006)
         {
-            printf("%04x 8XY3 - SET Vx >>= 1 FLAG %04x\n", opcode, Chip8.PC);
+            // Extract the X & Y register index
+            uint8_t X = (opcode & 0x0F00) >> 8;
+            uint8_t Y = (opcode & 0x00F0) >> 4;
+            bool flag;
+
+            Chip8.V[X] = Chip8.V[Y];
+            flag = ((Chip8.V[X] & 0x1) == 1) ? 1 : 0;
+            Chip8.V[X] >>= 1;
+            Chip8.V[0xF] = flag;
+
+            // Move the program counter
             Chip8.PC += 2;
-            // Flag Set
-            Chip8.V[0xF] = (Chip8.V[((opcode & 0x0F00) >> 8)]) & 0x01;
-            Chip8.V[((opcode & 0x0F00) >> 8)] >>= 1;
         }
 
         // 8XY7 - SET Vx = Vy - Vx
         else if ((opcode & 0x000F) == 0x0007)
         {
+            // Extract the X and Y register indices
+            uint8_t X = (opcode & 0x0F00) >> 8;
+            uint8_t Y = (opcode & 0x00F0) >> 4;
 
-            // Check UnderFlow
-            if (Chip8.V[((opcode & 0x00F0) >> 4)] > Chip8.V[((opcode & 0x0F00) >> 8)])
-            {
-                printf("%04x 8XY3 - SET Vx = Vy - Vx FLAG %04x\n", opcode, Chip8.PC);
-                Chip8.V[0xF] = 1;
-            }
-            else
-            {
-                printf("%04x 8XY3 - SET Vx = Vy - Vx %04x\n", opcode, Chip8.PC);
-                Chip8.V[0xF] = 0;
-            }
+            // Calculate the result
+            uint8_t Vx = Chip8.V[X];
+            uint8_t Vy = Chip8.V[Y];
+
+            // Update Vx
+            Chip8.V[X] = Vy - Vx;
+
+            // Check for Borrow
+            Chip8.V[0xF] = (Vy >= Vx) ? 1 : 0;
+
+            // Move the program counter
             Chip8.PC += 2;
-            Chip8.V[((opcode & 0x0F00) >> 8)] -= Chip8.V[((opcode & 0x00F0) >> 4)];
         }
 
         // 8XYE - SET Vx <<= 1
         else if ((opcode & 0x000F) == 0x000E)
         {
-            printf("%04x 8XYE - SET Vx <<= 1 FLAG %04x\n", opcode, Chip8.PC);
-            Chip8.PC += 2;
-            // Flag Set
-            Chip8.V[0xF] = (Chip8.V[((opcode & 0x0F00) >> 8)]) >> 7;
+            // Extract the X register index
+            uint8_t X = (opcode & 0x0F00) >> 8;
+            uint8_t Y = (opcode & 0x00F0) >> 4;
 
-            Chip8.V[((opcode & 0x0F00) >> 8)] <<= 1;
+            bool flag;
+
+            Chip8.V[X] = Chip8.V[Y];
+            flag = ((Chip8.V[X] >> 7) == 1) ? 1 : 0;
+            Chip8.V[X] <<= 1;
+            Chip8.V[0xF] = flag;
+
+            // Move the program counter
+            Chip8.PC += 2;
         }
     }
 
     // 9XY0 - SKIP Instruction if(Vx != Vy)
-    if ((opcode & 0xF000) == 0x9000)
+    if ((opcode & 0xF00F) == 0x9000)
     {
         if (Chip8.V[((opcode & 0x0F00) >> 8)] != Chip8.V[((opcode & 0x00F0) >> 4)])
         {
@@ -411,7 +436,6 @@ void ExecuteInstructions()
     if ((opcode & 0xF000) == 0xB000)
     {
         printf("%04x BNNN - SET PC = V0 + NNN %04x\n", opcode, Chip8.PC);
-        Chip8.PC += 2;
         Chip8.PC = Chip8.V[0x0] + (opcode & 0x0FFF);
     }
 
@@ -420,7 +444,7 @@ void ExecuteInstructions()
     {
         printf("%04x CXNN - SET Vx = rand(0-255) & NN %04x\n", opcode, Chip8.PC);
         Chip8.PC += 2;
-        Chip8.V[((opcode & 0x0F00) >> 8)] = (rand() % 0xFF) & (opcode & 0x00FF);
+        Chip8.V[((opcode & 0x0F00) >> 8)] = rand() & (opcode & 0x00FF);
     }
 
     // DXYN - DISPLAY draw(Vx, Vy, N)
@@ -437,7 +461,7 @@ void ExecuteInstructions()
         // EX9E - SKIP if(key[Vx] == 1)
         if ((opcode & 0x00FF) == 0x009E)
         {
-            if (Chip8.Key[((opcode & 0x0F00) >> 8)] == 1)
+            if (Chip8.Key[(((opcode & 0x0F00) >> 8) & 0xF)] == 1)
             {
                 printf("%04x EX9E - SKIP if(key[Vx] == 1) %04x\n", opcode, Chip8.PC);
                 Chip8.PC += 2;
@@ -447,7 +471,7 @@ void ExecuteInstructions()
         // EXA1 - SKIP if(key[Vx] != 1)
         if ((opcode & 0x00FF) == 0x00A1)
         {
-            if (Chip8.Key[((opcode & 0x0F00) >> 8)] != 1)
+            if (Chip8.Key[(((opcode & 0x0F00) >> 8) & 0xF)] != 1)
             {
                 printf("%04x EXA1 - SKIP if(key[Vx] != 1) %04x\n", opcode, Chip8.PC);
                 Chip8.PC += 2;
@@ -511,7 +535,7 @@ void ExecuteInstructions()
         {
             printf("%04x FX29 - SET I = Sprite_Address of Vx %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
-            Chip8.I = Chip8.V[((opcode & 0x0F00) >> 8)] * 0x5;
+            Chip8.I = Chip8.V[(((opcode & 0x0F00) & 0xF) >> 8)] * 0x5;
         }
 
         // FX33 - BCD of Vx At I[0] = BCD(100), I[1] = BCD(10), I[2] = BCD(1)
@@ -528,7 +552,7 @@ void ExecuteInstructions()
         if ((opcode & 0x00FF) == 0x0055)
         {
             Chip8.PC += 2;
-            for (int i = 0; i < ((opcode & 0x0F00) >> 8); i++)
+            for (int i = 0; i <= ((opcode & 0x0F00) >> 8); i++)
             {
                 Chip8.Memory[(Chip8.I + i)] = Chip8.V[i];
             }
@@ -539,7 +563,7 @@ void ExecuteInstructions()
         {
             printf("%04x FX65 - SET V[i] = Memory[I + i] %04x\n", opcode, Chip8.PC);
             Chip8.PC += 2;
-            for (int i = 0; i < ((opcode & 0x0F00) >> 8); i++)
+            for (int i = 0; i <= ((opcode & 0x0F00) >> 8); i++)
             {
                 Chip8.V[i] = Chip8.Memory[(Chip8.I + i)];
             }
@@ -782,7 +806,12 @@ void Run()
         }
 
         SDL_RenderPresent(renderer);
-        ExecuteInstructions();
+
+        for (int i = 0; i < 11; i++)
+        {
+            ExecuteInstructions();
+        }
+
         // Timers
         if (Chip8.Delay_Timer > 0)
         {
